@@ -1,0 +1,11 @@
+# CinderClip local runtime
+uploads/
+output/
+__pycache__/
+*.pyc
+
+# Local editor/system files
+.vscode/
+.DS_Store
+Thumbs.db
+.env

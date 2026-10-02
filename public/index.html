@@ -1,0 +1,350 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CinderClip — AI Video Clipper</title>
+<meta name="theme-color" content="#070302">
+<link rel="icon" href="/cinderclip.ico" type="image/png">
+<style>
+:root{--bg:#050301;--panel:rgba(13,8,5,.88);--panel2:#100805;--line:#2a140c;--line2:#3b1b0f;--text:#fff8f0;--muted:#a79a91;--dim:#6d5f57;--accent:#ff5a1f;--accent2:#ffb347;--danger:#ff4d2e;}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+body{overflow-x:hidden}
+canvas#stars{position:fixed;inset:0;width:100%;height:100%;z-index:-2;background:#050301}
+body:before{content:"";position:fixed;inset:-20%;z-index:-1;pointer-events:none;background:radial-gradient(circle at 50% 28%,rgba(255,82,25,.10),transparent 28%),radial-gradient(circle at 90% 8%,rgba(255,175,64,.055),transparent 20%)}
+a{color:inherit}
+.shell{width:min(1180px,calc(100% - 36px));margin:0 auto;padding:24px 0 72px}
+.top{display:flex;align-items:center;justify-content:space-between;padding:10px 0 54px}
+.brand{display:inline-flex;align-items:center;gap:10px;font-weight:850;letter-spacing:-.035em;font-size:20px;-webkit-font-smoothing:antialiased;text-rendering:geometricPrecision}
+.mark{width:34px;height:34px;flex:0 0 34px;overflow:hidden;border:1px solid rgba(255,104,38,.55);border-radius:11px;display:grid;place-items:center;background:linear-gradient(145deg,rgba(255,92,28,.16),rgba(20,9,5,.94));box-shadow:0 0 30px rgba(255,72,20,.18)}
+.mark img{width:26px;height:26px;max-width:none;max-height:none;display:block;object-fit:contain;image-rendering:auto}
+.status{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#a79a91;border:1px solid var(--line);background:rgba(12,7,4,.74);padding:9px 12px;border-radius:999px;backdrop-filter:blur(10px)}
+.hero{text-align:center;max-width:880px;margin:0 auto 34px}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;color:#ffb37a;border:1px solid rgba(255,92,38,.26);background:rgba(255,80,25,.065);padding:8px 11px;border-radius:999px;font-size:11px;letter-spacing:.13em;text-transform:uppercase;margin-bottom:18px}
+.eyebrow span{width:5px;height:5px;border-radius:50%;background:#ff9a3d;box-shadow:0 0 10px #ff5a1f}
+.hero h1{font-size:clamp(48px,8vw,94px);line-height:.9;letter-spacing:-.075em;margin:0 0 20px;font-weight:860}
+.hero h1 em{font-style:normal;color:#ff9d42;text-shadow:0 0 38px rgba(255,86,24,.28)}
+.hero p{margin:0 auto;color:var(--muted);font-size:17px;line-height:1.65;max-width:650px}
+.workspace{width:min(100%,980px);margin:0 auto}
+.drop{position:relative;min-height:340px;border:1px solid var(--line2);border-radius:28px;background:linear-gradient(180deg,rgba(18,9,5,.94),rgba(8,4,2,.97));display:grid;place-items:center;text-align:center;padding:36px;overflow:hidden;box-shadow:0 22px 80px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.02);transition:.2s ease}
+.drop:before{content:"";position:absolute;inset:1px;border-radius:27px;background:linear-gradient(135deg,rgba(255,110,42,.065),transparent 35%,transparent 75%,rgba(177,132,255,.03));pointer-events:none}
+.drop:after{content:"";position:absolute;width:380px;height:180px;left:50%;top:0;transform:translateX(-50%);background:radial-gradient(circle,rgba(255,92,26,.14),transparent 68%);filter:blur(10px);pointer-events:none}
+.drop.drag{border-color:rgba(255,118,48,.88);box-shadow:0 0 0 1px rgba(255,118,48,.20),0 0 80px rgba(255,74,20,.16)}
+.upload-inner{position:relative;z-index:1}
+.upload-orb{width:82px;height:82px;border-radius:22px;margin:0 auto 22px;border:1px solid rgba(255,112,42,.34);background:rgba(255,85,28,.08);display:grid;place-items:center;box-shadow:0 0 40px rgba(255,82,25,.10)}
+.upload-orb img{width:50px;height:50px;display:block;object-fit:contain;image-rendering:auto}
+.drop h2{margin:0 0 9px;font-size:24px;letter-spacing:-.035em}
+.muted{color:#8f8178;font-size:13px}
+.primary{border:0;background:linear-gradient(135deg,#ffb347,#ff4d1f);color:#1b0803;border-radius:12px;padding:12px 18px;font-weight:800;letter-spacing:-.01em;margin-top:19px;box-shadow:0 12px 30px rgba(255,79,26,.20);transition:.16s ease}
+.primary:hover{transform:translateY(-1px);filter:brightness(1.03)}
+.primary:disabled{opacity:.55;cursor:not-allowed;transform:none}
+.ghost{border:1px solid var(--line2);background:#120a06;color:#f3e7de;border-radius:11px;padding:10px 14px;font-weight:700}
+.meta-row{display:flex;justify-content:center;flex-wrap:wrap;gap:8px;margin-top:16px;color:#6f6057;font-size:11px}
+.meta-chip{padding:7px 9px;border:1px solid var(--line);border-radius:999px;background:rgba(10,10,13,.55)}
+.progress-wrap{margin:16px auto 0;width:min(100%,980px)}
+.progress{display:none;color:#9c9ca5;font-size:13px;padding:4px 2px}
+.progress-line{height:3px;width:100%;background:#111117;border-radius:999px;overflow:hidden;margin-top:7px;display:none}
+.progress-line:before{content:"";display:block;height:100%;width:38%;background:linear-gradient(90deg,transparent,#ff6a24,#ffd166,#ff4a1f,transparent);animation:scan 1.2s infinite}
+@keyframes scan{0%{transform:translateX(-160%)}100%{transform:translateX(360%)}}
+.controls{display:none;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px;margin-top:18px}
+.control{background:rgba(13,7,4,.90);border:1px solid var(--line);border-radius:16px;padding:16px;backdrop-filter:blur(10px);min-width:0}
+.control.primary-setting{grid-column:span 3}
+.control.secondary-setting{grid-column:span 2}
+.control label{display:block;color:#82766f;font-size:10px;text-transform:uppercase;letter-spacing:.13em;margin-bottom:10px}
+.control select,.control input[type=number]{width:100%;background:#111116;border:1px solid #292930;color:#efeff2;padding:11px 12px;border-radius:11px;outline:none}
+.control select{appearance:auto}
+.control .sub{display:block;color:#64646c;font-size:10px;margin-top:8px;min-height:12px;line-height:1.4}
+.setting-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
+.setting-top label{margin:0}
+.value-badge{font-size:12px;font-weight:800;color:#ffe7d1;background:rgba(255,95,28,.09);border:1px solid rgba(255,95,28,.22);padding:6px 9px;border-radius:999px;white-space:nowrap}
+.range{width:100%!important;padding:0!important;border:0!important;background:transparent!important;accent-color:#ff6727;height:24px;cursor:pointer}
+.range:focus{outline:none}
+.quick-row{display:flex;flex-wrap:wrap;gap:7px;margin-top:7px}
+.quick{border:1px solid #2a1710;background:#100905;color:#a99b92;border-radius:9px;padding:6px 9px;font-size:10px;font-weight:800;cursor:pointer;transition:.15s ease}
+.quick:hover,.quick.active{border-color:rgba(255,102,35,.55);color:#ffe4cf;background:rgba(255,85,25,.08)}
+.custom-wrap{margin-top:8px}
+.action-row{display:none;justify-content:center;margin-top:16px}
+.results-head{display:none;align-items:end;justify-content:space-between;margin:34px 0 14px}
+.results-head strong{font-size:17px;letter-spacing:-.025em}
+.results-head span{color:#6e6e77;font-size:12px}
+.results{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:15px}
+.card{background:rgba(11,6,3,.94);border:1px solid var(--line);border-radius:19px;overflow:hidden;box-shadow:0 18px 55px rgba(0,0,0,.18)}
+.card video{width:100%;aspect-ratio:9/16;background:#000;display:block}
+.cardbody{padding:13px 14px 15px}
+.cardbody strong{display:block;font-size:14px}
+.cardbody small{display:block;color:#6f6f79;margin-top:5px}
+.download{display:inline-flex;align-items:center;gap:7px;color:#1d0702;background:#fff0df;text-decoration:none;padding:9px 11px;border-radius:9px;margin-top:12px;font-size:12px;font-weight:800}
+.error{color:var(--danger);margin-top:15px;font-size:13px;text-align:center}
+.section-note{margin:30px auto 0;max-width:760px;padding:16px 18px;border:1px solid var(--line);border-radius:15px;color:#6d6d77;font-size:12px;line-height:1.55;background:rgba(9,9,12,.62)}
+.hidden{display:none!important}
+.footer{display:flex;justify-content:center;color:#555560;font-size:11px;margin-top:34px;letter-spacing:.04em;gap:14px;flex-wrap:wrap}
+.footer a{color:#7d6e65}
+@media(max-width:900px){.control.primary-setting,.control.secondary-setting{grid-column:span 3}}
+@media(max-width:700px){.shell{width:min(100% - 24px,1180px);padding-top:15px}.top{padding-bottom:38px}.status{display:none}.hero h1{font-size:50px}.hero p{font-size:15px}.drop{min-height:300px;padding:24px}.controls{grid-template-columns:1fr}.control.primary-setting,.control.secondary-setting{grid-column:span 1}.results-head{margin-top:28px}.footer{margin-bottom:18px}}
+</style>
+</head>
+<body>
+<canvas id="stars" aria-hidden="true"></canvas>
+<div class="shell">
+<header class="top">
+  <div class="brand"><span class="mark"><img src="/cinderclip.ico" alt="" aria-hidden="true"></span>CinderClip</div>
+  <div class="status">Connecting to engine…</div>
+</header>
+
+<section class="hero">
+  <div class="eyebrow"><span></span>Long video → short clips</div>
+  <h1>Cut the long stuff.<br><em>Keep the moments.</em></h1>
+  <p>Drop in a long video and CinderClip turns it into ready-to-preview short-form clips — powered by your CinderClip engine.</p>
+</section>
+
+<main class="workspace">
+  <section class="drop" id="drop">
+    <div class="upload-inner">
+      <div class="upload-orb"><img src="/cinderclip.ico" alt="" aria-hidden="true"></div>
+      <h2 id="dropTitle">Drop your video here</h2>
+      <div class="muted" id="dropMeta">MP4, MOV, MKV, WEBM · up to 2 GB</div>
+      <button class="primary" id="pick">Choose video</button>
+      <input class="hidden" id="file" type="file" accept="video/mp4,video/quicktime,video/x-matroska,video/webm,video/x-m4v,video/x-msvideo">
+      <div class="meta-row"><span class="meta-chip">PC processing</span><span class="meta-chip">Temporary session</span><span class="meta-chip">No account</span><span class="meta-chip">MP4 export</span></div>
+    </div>
+  </section>
+
+  <div class="progress-wrap">
+    <div class="progress" id="progress"></div>
+    <div class="progress-line" id="progressLine"></div>
+  </div>
+
+  <div class="controls" id="controls">
+    <div class="control primary-setting">
+      <div class="setting-top"><label>Number of clips</label><span class="value-badge" id="countValue">5 clips</span></div>
+      <input id="count" class="range" type="range" min="1" max="10" step="1" value="5" aria-label="Number of clips">
+      <div class="quick-row" id="countQuick">
+        <button class="quick" type="button" data-count="3">3</button>
+        <button class="quick active" type="button" data-count="5">5</button>
+        <button class="quick" type="button" data-count="7">7</button>
+        <button class="quick" type="button" data-count="10">10</button>
+      </div>
+      <span class="sub">Choose 1–10 clips. The slider gives exact control.</span>
+    </div>
+
+    <div class="control primary-setting">
+      <div class="setting-top"><label>Clip length</label><span class="value-badge" id="lengthValue">35 sec</span></div>
+      <input id="length" class="range" type="range" min="1" max="90" step="1" value="35" aria-label="Clip length in seconds">
+      <div class="quick-row" id="lengthQuick">
+        <button class="quick" type="button" data-length="15">15s</button>
+        <button class="quick" type="button" data-length="30">30s</button>
+        <button class="quick active" type="button" data-length="35">35s</button>
+        <button class="quick" type="button" data-length="45">45s</button>
+        <button class="quick" type="button" data-length="60">60s</button>
+      </div>
+      <span class="sub">1–90 seconds. Pick a preset or drag for an exact length.</span>
+    </div>
+
+    <div class="control secondary-setting">
+      <label>Format</label>
+      <select id="aspect"><option selected value="9:16">9:16 Vertical</option><option value="1:1">1:1 Square</option><option value="16:9">16:9 Landscape</option></select>
+      <span class="sub" id="aspectHint"></span>
+    </div>
+
+    <div class="control secondary-setting">
+      <label>Resolution</label>
+      <select id="resolution"></select>
+      <div class="custom-wrap"><input id="customResolution" class="hidden" type="number" min="144" step="2" placeholder="Custom long-side px"></div>
+      <span class="sub" id="resolutionHint"></span>
+    </div>
+
+    <div class="control secondary-setting">
+      <label>Quality</label>
+      <select id="quality"><option selected value="balanced">Balanced</option><option value="high">High</option></select>
+      <span class="sub">Balanced is faster. High keeps more detail.</span>
+    </div>
+  </div>
+
+  <div class="action-row" id="actionRow"><button class="primary" id="generate">Generate clips</button></div>
+  <div class="error" id="error"></div>
+
+  <div class="results-head" id="resultsHead"><strong>Generated clips</strong><span id="resultsCount"></span></div>
+  <div class="results" id="results"></div>
+
+  <div class="section-note" id="note">Files are temporary to the current session. Refreshing, leaving the page, or restarting the local engine triggers cleanup; interrupted sessions are also cleaned up automatically. Download anything you want to keep before leaving. Resolution never upscales past the video you dropped in. “Source maximum” uses the highest clean output possible for the selected format.</div>
+</main>
+
+<div class="footer"><a href="/privacy.html">Privacy</a><a href="/terms.html">Terms</a><a href="/disclaimer.html">Disclaimer</a><span>CINDERCLIP · LOCAL VIDEO TOOL</span></div>
+</div>
+
+<script>
+const $=s=>document.querySelector(s);
+let videoId=null;
+let sourceMeta=null;
+const sessionId=(crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2));
+let sessionStarted=false;
+let downloadInProgress=false;
+const $id=id=>document.getElementById(id);
+const drop=$('#drop'),file=$('#file'),progress=$('#progress'),progressLine=$('#progressLine'),controls=$('#controls'),actionRow=$('#actionRow'),generate=$('#generate');
+const statusBadge=document.querySelector('.status');
+const API_BASE='https://defined-distant-ken-placement.trycloudflare.com';
+const LOCAL_ENGINE='http://127.0.0.1:8787';
+const localPage=/^(localhost|127\.0\.0\.1)$/.test(location.hostname);
+function endpoint(path){return API_BASE+path}
+function sessionEndpoint(path){return endpoint(path)+(path.includes('?')?'&':'?')+'session='+encodeURIComponent(sessionId)}
+async function startSession(){
+  if(sessionStarted) return true;
+  try{
+    const r=await fetch(sessionEndpoint('/api/session/start'),{method:'POST',cache:'no-store'});
+    const d=await r.json();
+    if(!r.ok || !d.ok) throw Error(d.error||'Could not start session');
+    sessionStarted=true;
+    return true;
+  }catch(e){
+    sessionStarted=false;
+    statusBadge.textContent='Engine · Session Error';
+    return false;
+  }
+}
+async function fetchLocal(path, options={}){
+  return fetch(LOCAL_ENGINE+path,{...options,targetAddressSpace:'loopback'});
+}
+async function detectEngine(){
+  if(localPage){
+    API_BASE='';
+    statusBadge.textContent='Local Engine · Ready';
+    return await startSession();
+  }
+  statusBadge.textContent='Checking local engine…';
+  try{
+    const controller=new AbortController();
+    const timer=setTimeout(()=>controller.abort(),5000);
+    const r=await fetchLocal('/api/health',{cache:'no-store',signal:controller.signal});
+    clearTimeout(timer);
+    const d=await r.json();
+    if(!r.ok || !d.ok) throw Error(d.error||'Engine unavailable');
+    API_BASE=LOCAL_ENGINE;
+    if(!(await startSession())) return false;
+    statusBadge.textContent='Local Engine · Connected';
+    return true;
+  }catch(e){
+    API_BASE='';
+    statusBadge.textContent='Cloud UI · Engine Offline';
+    return false;
+  }
+}
+async function reportLoopbackPermission(){
+  if(localPage || !navigator.permissions) return;
+  try{
+    const p=await navigator.permissions.query({name:'loopback-network'});
+    if(p.state==='denied') statusBadge.textContent='Engine Offline · Allow Apps on device';
+  }catch(e){}
+}
+reportLoopbackPermission();
+detectEngine();
+const aspect=$('#aspect'),resolution=$('#resolution'),customResolution=$('#customResolution'),resolutionHint=$('#resolutionHint'),aspectHint=$('#aspectHint');
+const countInput=$('#count'),lengthInput=$('#length'),countValue=$('#countValue'),lengthValue=$('#lengthValue');
+function syncQuickButtons(group, key, value){
+  group.querySelectorAll('.quick').forEach(btn=>btn.classList.toggle('active',Number(btn.dataset[key])===Number(value)));
+}
+function syncCount(){
+  countValue.textContent=`${countInput.value} clip${countInput.value==='1'?'':'s'}`;
+  syncQuickButtons($('#countQuick'),'count',countInput.value);
+}
+function syncLength(){
+  lengthValue.textContent=`${lengthInput.value} sec`;
+  syncQuickButtons($('#lengthQuick'),'length',lengthInput.value);
+}
+countInput.addEventListener('input',syncCount);
+lengthInput.addEventListener('input',syncLength);
+$('#countQuick').addEventListener('click',e=>{
+  const btn=e.target.closest('.quick'); if(!btn) return;
+  countInput.value=btn.dataset.count; syncCount();
+});
+$('#lengthQuick').addEventListener('click',e=>{
+  const btn=e.target.closest('.quick'); if(!btn) return;
+  lengthInput.value=btn.dataset.length; syncLength();
+});
+syncCount(); syncLength();
+$('#pick').onclick=()=>file.click();
+drop.ondragover=e=>{e.preventDefault();drop.classList.add('drag')};
+drop.ondragleave=()=>drop.classList.remove('drag');
+drop.ondrop=e=>{e.preventDefault();drop.classList.remove('drag');if(e.dataTransfer.files[0])handle(e.dataTransfer.files[0])};
+file.onchange=()=>file.files[0]&&handle(file.files[0]);
+
+async function handle(f){
+  $('#error').textContent='';
+  if(!(await detectEngine())){
+    $('#error').textContent='CinderClip engine is offline. Start the CinderClip server, then try again.';
+    progress.textContent=''; progressLine.style.display='none';
+    return;
+  } $('#results').innerHTML=''; $('#resultsHead').style.display='none';
+  progress.style.display='block'; progressLine.style.display='block'; progress.textContent='Reading video…';
+  const fd=new FormData(); fd.append('video',f);
+  try{
+    const r=await fetch(sessionEndpoint('/api/upload'),{method:'POST',body:fd}); const d=await r.json(); if(!r.ok)throw Error(d.error);
+    videoId=d.id; sourceMeta=d; progress.textContent=`Ready · ${d.name} · ${Math.round(d.duration)}s`;
+    $('#dropTitle').textContent='Video loaded'; $('#dropMeta').textContent=`${d.width}×${d.height} · ${Math.round(d.duration)} seconds`;
+    controls.style.display='grid'; actionRow.style.display='flex'; $('#note').style.display='block';
+    updateResolutionOptions();
+    progressLine.style.display='none';
+  }catch(e){$('#error').textContent=e.message; progress.textContent=''; progressLine.style.display='none'}
+}
+
+generate.onclick=async()=>{
+  generate.disabled=true; progress.style.display='block'; progressLine.style.display='block'; progress.textContent='Rendering clips…'; $('#error').textContent=''; $('#results').innerHTML='';
+  try{
+    const selectedResolution=resolution.value==='custom' ? `custom:${Math.max(144, Math.min(+customResolution.value || getMaxLong(), getMaxLong()))}` : resolution.value;
+    if(!(await detectEngine())) throw Error('CinderClip engine is offline. Start the CinderClip server and try again.');
+    const r=await fetch(sessionEndpoint('/api/generate'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:videoId,count:+$('#count').value,length:+$('#length').value,aspect:aspect.value,resolution:selectedResolution,quality:$('#quality').value})});
+    const d=await r.json(); if(!r.ok)throw Error(d.error);
+    $('#results').innerHTML=d.clips.map(c=>{const u=endpoint(c.url);const downloadUrl=endpoint('/download/'+encodeURIComponent(c.id)+'?session='+encodeURIComponent(sessionId));const downloadName=c.download_name||c.title+'.mp4';return `<article class="card"><video controls preload="metadata" src="${u}"></video><div class="cardbody"><strong>${c.title}</strong><small>${fmt(c.start)} → ${fmt(c.end)} · ${c.resolution}</small><a class="download" href="${downloadUrl}" download="${downloadName}"><span>↓</span> Download ${c.resolution}</a></div></article>`}).join('');
+    $('#resultsHead').style.display='flex'; $('#resultsCount').textContent=`${d.clips.length} clips · ${d.clips[0]?.resolution || ''}`;
+    progress.textContent='Done'; progressLine.style.display='none';
+  }catch(e){$('#error').textContent=e.message; progress.textContent=''; progressLine.style.display='none'}finally{generate.disabled=false}
+};
+function fmt(s){return new Date(s*1000).toISOString().substring(11,19)}
+function getMaxDims(){
+  if(!sourceMeta) return {width:0,height:0,long:0};
+  const sw=sourceMeta.width, sh=sourceMeta.height;
+  if(aspect.value==='9:16'){ const h=Math.floor(Math.min(sh,sw*16/9)/2)*2; return {width:Math.floor(h*9/16/2)*2,height:h,long:h}; }
+  if(aspect.value==='16:9'){ const w=Math.floor(Math.min(sw,sh*16/9)/2)*2; return {width:w,height:Math.floor(w*9/16/2)*2,long:w}; }
+  const side=Math.floor(Math.min(sw,sh)/2)*2; return {width:side,height:side,long:side};
+}
+function getMaxLong(){return getMaxDims().long}
+function updateResolutionOptions(){
+  if(!sourceMeta) return;
+  const max=getMaxDims();
+  const presets=[2160,1440,1080,720,480].filter(v=>v<=max.long);
+  const seen=new Set();
+  const dimsFor=v=>{ if(aspect.value==='9:16'){let w=Math.round(v*9/16); if(w%2)w++; return `${w}×${v}`;} if(aspect.value==='16:9'){let h=Math.round(v*9/16); if(h%2)h++; return `${v}×${h}`;} return `${v}×${v}`; };
+  resolution.innerHTML='';
+  const sourceOpt=document.createElement('option'); sourceOpt.value='source'; sourceOpt.textContent=`Source maximum · ${max.width}×${max.height}`; resolution.appendChild(sourceOpt); seen.add(max.long);
+  for(const v of presets.reverse()){ if(seen.has(v)) continue; const o=document.createElement('option'); o.value=String(v); o.textContent=`${dimsFor(v)} · ${v === 2160 ? '4K-class' : v+' long-side'}`; resolution.appendChild(o); seen.add(v); }
+  const custom=document.createElement('option'); custom.value='custom'; custom.textContent='Custom long-side'; resolution.appendChild(custom);
+  customResolution.classList.add('hidden'); customResolution.max=max.long; customResolution.value='';
+  resolutionHint.textContent=`Max ${max.width}×${max.height} · never upscales`;
+  aspectHint.textContent=`Source ${sourceMeta.width}×${sourceMeta.height}`;
+}
+aspect.onchange=updateResolutionOptions;
+resolution.onchange=()=>{ const isCustom=resolution.value==='custom'; customResolution.classList.toggle('hidden',!isCustom); resolutionHint.textContent=isCustom?`Up to ${getMaxLong()} px long-side`: `Max ${getMaxDims().width}×${getMaxDims().height} · never upscales`; if(isCustom)customResolution.focus(); };
+
+const canvas=$('#stars'),ctx=canvas.getContext('2d');
+let stars=[],w=0,h=0,dpr=1;
+function resize(){dpr=Math.min(window.devicePixelRatio||1,2);w=innerWidth;h=innerHeight;canvas.width=w*dpr;canvas.height=h*dpr;canvas.style.width=w+'px';canvas.style.height=h+'px';ctx.setTransform(dpr,0,0,dpr,0,0);const count=Math.min(180,Math.floor(w*h/9500));stars=Array.from({length:count},()=>({x:Math.random()*w,y:Math.random()*h,r:Math.random()*1.05+.18,a:Math.random()*.65+.18,s:(Math.random()-.5)*.08,t:Math.random()*Math.PI*2,heat:Math.random()}))}
+function paint(){ctx.clearRect(0,0,w,h);for(const p of stars){p.t+=.007;p.y+=p.s;if(p.y>h+2)p.y=-2;if(p.y<-2)p.y=h+2;const alpha=p.a*(.72+.28*Math.sin(p.t));const heat=p.heat;ctx.fillStyle=heat<.58?`rgba(255,180,70,${alpha})`:heat<.88?`rgba(255,96,26,${alpha})`:`rgba(255,235,185,${alpha})`;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill()}requestAnimationFrame(paint)}
+addEventListener('resize',resize);resize();paint();
+
+document.addEventListener('click',e=>{
+  const link=e.target.closest('.download');
+  if(!link) return;
+  downloadInProgress=true;
+  setTimeout(()=>{downloadInProgress=false},15000);
+});
+
+function cleanupSession(){
+  if(!sessionStarted || downloadInProgress) return;
+  try{
+    fetch(sessionEndpoint('/api/session/cleanup'),{method:'POST',keepalive:true,cache:'no-store'}).catch(()=>{});
+  }catch(e){}
+}
+addEventListener('pagehide',cleanupSession);
+</script>
+</body>
+</html>
