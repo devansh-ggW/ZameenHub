@@ -46,7 +46,7 @@
 <script>
 const USER_KEY="zameenhub_local_user_v2",DB_NAME="zameenhub_store",DB_VERSION=1;
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
-if(!localStorage.getItem(USER_KEY)){location.href="/#signup";} 
+if(!localStorage.getItem(USER_KEY)){location.href="/?signup=1";} 
 function openDb(){return new Promise((res,rej)=>{const r=indexedDB.open(DB_NAME,DB_VERSION);r.onupgradeneeded=()=>{const db=r.result;if(!db.objectStoreNames.contains("listings"))db.createObjectStore("listings",{keyPath:"id"});};r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})}
 function putListing(v){return openDb().then(db=>new Promise((res,rej)=>{const tx=db.transaction("listings","readwrite");tx.objectStore("listings").put(v);tx.oncomplete=()=>res();tx.onerror=()=>rej(tx.error)}))}
 function compress(file){return new Promise((res,rej)=>{const img=new Image();const fr=new FileReader();fr.onload=()=>{img.onload=()=>{const max=1280,s=Math.min(1,max/Math.max(img.width,img.height)),c=document.createElement("canvas");c.width=Math.max(1,Math.round(img.width*s));c.height=Math.max(1,Math.round(img.height*s));const ctx=c.getContext("2d");ctx.drawImage(img,0,0,c.width,c.height);res(c.toDataURL("image/webp",.76))};img.onerror=rej;img.src=fr.result};fr.onerror=rej;fr.readAsDataURL(file)})}
